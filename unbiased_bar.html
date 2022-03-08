@@ -63,7 +63,7 @@
 
       avgData = d3.values(avgData);
       avgData.forEach(d => {
-        d.Value = d3.mean(d.values);
+        d.Value = d3.sum(d.values);
       });
 
       console.log(avgData);
