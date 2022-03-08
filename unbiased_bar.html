@@ -1,0 +1,117 @@
+<body>
+  <script src="https://d3js.org/d3.v5.min.js"></script>
+
+  <style>
+    * {
+      font-family: sans-serif;
+    }
+    .bar-chart {
+      border: solid 5px gray;
+      background-color: rgb(210, 240, 180);
+    }
+    .bar-chart2 {
+      border: solid 5px red;
+      background-color: rgb(30, 160, 210);
+    }
+    .bar {
+      fill: orange;
+    }
+    .label {
+      font-size: 9pt;
+    }
+    .category {
+      text-anchor: end;
+    }
+  </style>
+  <script>
+    //read in the data
+
+    var margin = {top: 20, right: 20, bottom: 30, left: 40},
+      width = 1260 - margin.left - margin.right,
+      height = 500 - margin.top - margin.bottom;
+
+    var svg = d3.select("body").append("svg")
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.top + margin.bottom)
+      .attr("class", "bar-chart")
+      .append("g")
+      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    data = d3.csv("unbiased.csv").then(data => {
+      data.forEach(d => {
+        d.Value = +d.Value; //convert to a number
+      });
+
+      console.log(data);
+
+      const id = d => d.Description;
+
+      avgData = {};
+
+      data.forEach(d => {
+        const curId = id(d);
+        if(!avgData.hasOwnProperty(curId)){
+          avgData[curId] = {
+            values: [],
+            label: curId
+          };
+        }
+        avgData[curId].values.push(d.Value);
+      });
+
+      console.log(avgData);
+
+      avgData = d3.values(avgData);
+      avgData.forEach(d => {
+        d.Value = d3.mean(d.values);
+      });
+
+      console.log(avgData);
+
+      const max = d3.max(avgData, d => d.Value);
+
+      const x = d3.scaleBand()
+        .rangeRound([0, width])
+        .padding(.1)
+        .domain(avgData.map(d => d.label));
+
+      const y = d3.scaleLinear()
+        .rangeRound([height, 0])
+        .domain([0, max]);
+
+      const greenColorScale = d3.scaleLinear()
+        .domain([0, max])
+        .range(["#ccec36", "00441b"]);
+
+      const entries = svg.selectAll("g")
+        .data(avgData)
+        .enter()
+          .append("g");
+
+      entries.each(function(d,i){
+        console.log(d);
+        const entry = d3.select(this);
+
+        entry.append("rect")
+          .attr("class", "bar")
+          .attr("x", x(d.label))
+          .attr("width", x.bandwidth())
+          .attr("y", y(d.Value))
+          .attr("height", height - y(d.Value))
+          .style("fill", "#990000" );
+      });
+
+      svg.append("g")
+        .attr("transform", "translate(0, " + height + ")")
+        .call(d3.axisBottom(x));
+
+      svg.append("g")
+        .call(d3.axisLeft(y));
+
+    });
+
+
+
+    </script>
+
+</body>
