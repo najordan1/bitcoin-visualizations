@@ -1,0 +1,86 @@
+<body>
+    <h2>Biased Chart</h2>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <style>
+        * {
+            font-family: sans-serif;
+          }
+          .bar-chart {
+            border: solid 1px gray;
+            background-color: rgb(255,255,220);
+          }
+          .label {
+            font-size: 9pt;
+          }
+    </style>
+    <script>
+        var margin = {top: 20, right: 20, bottom: 30, left: 60},
+            width = 960 - margin.left - margin.right,
+            height = 500 - margin.top - margin.bottom;
+
+        var svg = d3.select("body").append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .attr("class", "bar-chart")
+            .append("g")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+        data = d3.csv('../../data/EIA 2019 International Energy Consumption.csv').then(data => {
+            data.map(row => {
+                row.energy = +row['2019'];
+                row.country = row.Country.trim();
+            });
+            // remove NAs
+            data = data.filter(row => row.energy);
+            // add bitcoin as a country
+            data.push({ Country: 'Bitcoin', energy: 52.18 })
+
+            data.sort((a, b) => (a.energy > b.energy) ? 1 : -1).splice(-6,6);
+
+            const ymax = d3.max(data, d => d.energy);
+            const y = d3.scaleLinear()
+                .rangeRound([height, 0])
+                .domain([0, ymax]);
+            const x = d3.scaleBand()
+                .rangeRound([0, width])
+                .padding(0.01) // space between bars
+                .domain(data.map(d => d.Country));
+
+            const entries = svg.selectAll("g")
+                .data(data)
+                .enter()
+                .append("g");
+
+            entries.each(function(d,i) {
+                const entry = d3.select(this);
+        
+                entry.append("rect")
+                    .attr("x", x(d.Country))
+                    .attr("width", x.bandwidth())
+                    .attr("y", y(d.energy))
+                    .attr("height", height - y(d.energy))
+                    .style("fill", d.Country === 'Bitcoin' ? '#e41a1c' : '#377eb8');
+            });
+
+            svg.append("g")
+                .attr("transform", `translate(0, ${height})`)
+                .call(d3.axisBottom(x).tickFormat(d => d === 'Bitcoin' ? 'Bitcoin' : ''));
+            
+            svg.append("g")
+                .call(d3.axisLeft(y));
+
+            svg.append("text")
+                .attr("text-anchor", "end")
+                .attr("x", width)
+                .attr("y", height + margin.top)
+                .text("Countries");
+            
+            svg.append("text")
+                .attr("text-anchor", "end")
+                .attr("transform", "rotate(-90)")
+                .attr("y", -margin.left+20)
+                .attr("x", -margin.top)
+                .text("Total Energy Consumed (billion kWh)")
+        });
+    </script>
+</body>
