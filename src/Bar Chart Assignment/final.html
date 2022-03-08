@@ -1,11 +1,56 @@
 <body>
     <h2>Bar Chart Assignment</h2>
-    <p>opening question</p>
+    <p>
+        The question we are trying to ask is on its face incredibly simple:
+        How much energy, in total, has Bitcoin consumed? On its own, it would
+        seem like that question could be answered with a simple number (52.18
+        billion kWh in 2019) and nothing else. However, while that answer is
+        technically correct, it is unhelpful in explaining how much energy is
+        consumed in a way that people can understand. How big is a kilowatt hour?
+        Is 52.18 billion a lot? Is it unreasonably a lot? In order to properly
+        answer the question, therefore, it becomes necessary to provide a point
+        (or several points) of comparison. How much energy does Bitcoin consume,
+        relative to the energy consumption of things the audience would be better
+        able to visualize? We answer this question in the following two bar graphs,
+        each using a different comparison: one that hopefully demonstrates the
+        narrative we wish to show in the answer, and one that doesn't.
+    </p>
     <script src="https://d3js.org/d3.v5.min.js"></script>
     <svg id="chart1"></svg>
-    <p>discussing chart 1</p>
+    <p>
+        This first bar chart shows a comparison of the total energy consumption of Bitcoin
+        in 2019 (using data from the 
+        <a href="https://ccaf.io/cbeci/index">Cambridge Bitcoin Electricity Consumption Index (CBECI)</a>)
+        with the total energy consumption of every country in 2019 (using data from the 
+        <a href="https://www.eia.gov/international/overview/world">U.S. Energy Information Administration (EIA)</a>)
+        with Bitcoin highlighted in red. It should be noted that the five countries with the highest
+        energy consumption (China, United States, India, Russia, and Japan) were excluded
+        from this chart due to being significant outliers from every other country in terms
+        of energy consumption. The implications of this chart should be clear: Bitcoin, a
+        relatively new technology that with a niche userbase, consumes more power annually
+        than most countries. While not the largest bar, it's visibly significantly larger
+        than a majority of other bars on the chart. It is absurd to the point of indefensibility
+        that such a small industry should be consuming so much energy on a global scale.
+    </p>
     <svg id="chart2"></svg>
-    <p>discussing chart 2</p>
+    <p>
+        This second bar chart shows a comparison of the total energy consumption of Bitcoin
+        from November 2019 to November 2021 (using data from the
+        <a href="https://ccaf.io/cbeci/index">CBECI</a>) with the total energy consumption of
+        sectors of society just within the United States in the same timeframe
+        (using data from the <a href="https://www.eia.gov/totalenergy/data/monthly/">EIA</a>).
+        This graph presents an alternative view of Bitcoin's energy consumption, namely that it
+        is a very small fraction of energy consumption in global society (given how small it is
+        compared to the consumption in the U.S. alone). Under this chart, it seems that Bitcoin's
+        energy consumption is almost negligible when compared to the energy consumption that already
+        exists, and thus Bitcoin's energy consumption shouldn't be concerning (or, at least, it
+        shouldn't be the focus of energy reduction efforts). Additionally, this chart lays bare
+        the data manipulation performed in the first graph: if the five 'outliers', particularly
+        China and the United States, were to be included, Bitcoin's relative height would be so
+        small as to be indistinguishable from a majority of countries. Excluding them makes Bitcoin's
+        place in the dataset more visually distinct, but also makes it appear to be a larger percentage
+        of global energy consumption that it actually is.
+    </p>
     <style>
         * {
             font-family: sans-serif;
