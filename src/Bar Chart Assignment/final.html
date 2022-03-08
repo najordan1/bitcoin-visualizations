@@ -1,0 +1,165 @@
+<body>
+    <h2>Bar Chart Assignment</h2>
+    <p>opening question</p>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <svg id="chart1"></svg>
+    <p>discussing chart 1</p>
+    <svg id="chart2"></svg>
+    <p>discussing chart 2</p>
+    <style>
+        * {
+            font-family: sans-serif;
+          }
+          .bar-chart {
+            border: solid 1px gray;
+            background-color: rgb(255,255,220);
+          }
+          .label {
+            font-size: 9pt;
+          }
+    </style>
+    <script>
+        var margin = {top: 20, right: 20, bottom: 35, left: 60},
+            width = 960 - margin.left - margin.right,
+            height = 500 - margin.top - margin.bottom;
+
+        var svg = d3.select("#chart1")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .attr("class", "bar-chart")
+            .append("g")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+        data = d3.csv('../../data/EIA 2019 International Energy Consumption.csv').then(data => {
+            data.map(row => {
+                row.energy = +row['2019'];
+                row.country = row.Country.trim();
+            });
+            // remove NAs
+            data = data.filter(row => row.energy);
+            // add bitcoin as a country
+            data.push({ Country: 'Bitcoin', energy: 52.18 })
+            // sort and remove 5 largest countries
+            data.sort((a, b) => (a.energy > b.energy) ? 1 : -1).splice(-5,5);
+
+            const ymax = d3.max(data, d => d.energy);
+            const y = d3.scaleLinear()
+                .rangeRound([height, 0])
+                .domain([0, ymax]);
+            const x = d3.scaleBand()
+                .rangeRound([0, width])
+                .padding(0.01) // space between bars
+                .domain(data.map(d => d.Country));
+
+            const entries = svg.selectAll("g")
+                .data(data)
+                .enter()
+                .append("g");
+
+            entries.each(function(d,i) {
+                const entry = d3.select(this);
+        
+                entry.append("rect")
+                    .attr("x", x(d.Country))
+                    .attr("width", x.bandwidth())
+                    .attr("y", y(d.energy))
+                    .attr("height", height - y(d.energy))
+                    .style("fill", d.Country === 'Bitcoin' ? '#e41a1c' : '#377eb8');
+            });
+
+            svg.append("g")
+                .attr("transform", `translate(0, ${height})`)
+                .call(d3.axisBottom(x).tickFormat(d => d === 'Bitcoin' ? 'Bitcoin' : ''));
+            
+            svg.append("g")
+                .call(d3.axisLeft(y));
+            // axis titles
+            svg.append("text")
+                .attr("x", (width / 2))
+                .attr("y", height + margin.top + 5)
+                .text("Countries");
+            
+            svg.append("text")
+                .attr("text-anchor", "end")
+                .attr("transform", "rotate(-90)")
+                .attr("y", -margin.left+20)
+                .attr("x", -margin.top)
+                .text("Total Energy Consumed in 2019 (billion kWh)")
+        });
+
+        var svg2 = d3.select("#chart2")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .attr("class", "bar-chart")
+            .append("g")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+        data = d3.csv("../../data/unbiased.csv").then(data => {
+            data.forEach(d => {
+              d.Value = +d.Value; //convert to a number
+            });
+      
+            const id = d => d.Description;
+      
+            avgData = {};
+      
+            data.forEach(d => {
+              const curId = id(d);
+              if(!avgData.hasOwnProperty(curId)){
+                avgData[curId] = {
+                  values: [],
+                  label: curId
+                };
+              }
+              avgData[curId].values.push(d.Value);
+            });
+      
+            avgData = d3.values(avgData);
+            avgData.forEach(d => {
+              d.Value = d3.sum(d.values);
+            });
+      
+            const max = d3.max(avgData, d => d.Value);
+      
+            const x = d3.scaleBand()
+              .rangeRound([0, width])
+              .padding(.1)
+              .domain(avgData.map(d => d.label));
+      
+            const y = d3.scaleLinear()
+              .rangeRound([height, 0])
+              .domain([0, max]);
+      
+            const entries = svg2.selectAll("g")
+              .data(avgData)
+              .enter()
+                .append("g");
+      
+            entries.each(function(d,i){
+              const entry = d3.select(this);
+      
+              entry.append("rect")
+                .attr("class", "bar")
+                .attr("x", x(d.label))
+                .attr("width", x.bandwidth())
+                .attr("y", y(d.Value))
+                .attr("height", height - y(d.Value))
+                .style("fill", "#4daf4a" );
+            });
+      
+            svg2.append("g")
+              .attr("transform", "translate(0, " + height + ")")
+              .call(d3.axisBottom(x));
+      
+            svg2.append("g")
+              .call(d3.axisLeft(y));
+
+            svg2.append("text")
+              .attr("text-anchor", "center")
+              .attr("x", (width / 2) - margin.left - margin.right)
+              .attr("y", height + margin.top + 10)
+              .text("Total Worldwide Consumption by Industry");
+      
+          });
+    </script>
+</body>
