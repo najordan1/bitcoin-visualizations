@@ -1,0 +1,87 @@
+<body>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+  
+    <style>
+      * {
+        font-family: sans-serif;
+      }
+      .axis--x path {
+        stroke: black;
+  
+      }
+  
+      .line {
+        fill: none;
+        stroke: steelblue;
+        stroke-width: 1.5px;
+      }
+    </style>
+    <h2>Bitcoin's Growing Energy Consumption</h2>
+    <p>
+      This is a paragraph about the question being asked
+    </p>
+    <svg id="chart"></svg>
+    <p>
+      This explains how the chart answers the question
+    </p>
+    <script>
+      var margin = {top: 20, right: 20, bottom: 30, left: 40},
+        width = 960 - margin.left - margin.right,
+        height = 500 - margin.top - margin.bottom;
+  
+    // append the svg object to the body of the page
+    // append a 'group' element to 'svg'
+    // moves the 'group' element to the top left margin
+    var svg = d3.select("#chart")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform",
+            "translate(" + margin.left + "," + margin.top + ")");
+
+    var parseTime = d3.timeParse("%m/%d/%Y %H:%M");
+  
+    var x = d3.scaleTime().range([0, width]),
+        y = d3.scaleLinear().range([height, 0]),
+        z = d3.scaleOrdinal(d3.schemeCategory10);
+  
+    var line = d3.line()
+        .curve(d3.curveLinear)
+        .x(d => x(d.date))
+        .y(d => y(d.estConsumption));
+    
+    data = d3.csv("../../data/CBECI Daily Network Power Demand.csv").then(data => {
+        data.forEach(d => {
+          d.date = parseTime(d['Date and Time']);
+          d.estConsumption = +d['power GUESS, GW'];
+        });
+  
+        x.domain(d3.extent(data, d => d.date));
+        y.domain([0,d3.max(data, d => d.estConsumption)]);
+  
+        svg.append("g")
+            .attr("class", "axis axis--x")
+            .attr("transform", "translate(0," + height + ")")
+            .call(d3.axisBottom(x));
+  
+        svg.append("g")
+            .attr("class", "axis axis--y")
+            .call(d3.axisLeft(y))
+            .append("text")
+                .attr("transform", "rotate(-90)")
+                .attr("y", 6)
+                .attr("dy", "0.71em")
+                .attr("fill", "#000")
+                .text("Estimated Daily Energy Consumption (GW)");
+  
+        var bitcoin = svg.selectAll(".bitcoin")
+            .data([data])
+            .enter().append("g")
+            .attr("class", "bitcoin");
+  
+        bitcoin.append("path")
+            .attr("class", "line")
+            .attr("d", d => line(d));
+  
+    });
+  </script>
