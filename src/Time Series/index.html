@@ -74,7 +74,7 @@
         .x(d => x(d.date))
         .y(d => y(d.estConsumption));
     
-    data = d3.csv("../../data/CBECI Daily Network Power Demand.csv").then(data => {
+    data = d3.csv("CBECI Daily Network Power Demand.csv").then(data => {
         data.forEach(d => {
           d.date = parseTime(d['Date and Time']);
           d.estConsumption = +d['power GUESS, GW'];
