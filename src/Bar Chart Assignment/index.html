@@ -75,7 +75,7 @@
             .append("g")
             .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-        data = d3.csv('EIA 2019 International Energy Consumption.csv').then(data => {
+        data = d3.csv('../data/EIA 2019 International Energy Consumption.csv').then(data => {
             data.map(row => {
                 row.energy = +row['2019'];
                 row.country = row.Country.trim();
@@ -139,7 +139,7 @@
             .append("g")
             .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-        data = d3.csv("unbiased.csv").then(data => {
+        data = d3.csv("../data/unbiased.csv").then(data => {
             data.forEach(d => {
               d.Value = +d.Value; //convert to a number
             });
