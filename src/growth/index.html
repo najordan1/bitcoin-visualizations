@@ -1,10 +1,10 @@
+<head>
+  <link rel="stylesheet" href="../globals.css">
+</head>
 <body>
     <script src="https://d3js.org/d3.v5.min.js"></script>
   
     <style>
-      * {
-        font-family: sans-serif;
-      }
       .axis--x path {
         stroke: black;
   
@@ -12,10 +12,22 @@
   
       .line {
         fill: none;
-        stroke: steelblue;
+        stroke: #31a354;
         stroke-width: 1.5px;
       }
     </style>
+    <div class="topnav">
+        <a class="active" href="../">Home</a>
+        <div class="dropdown">
+            <button class="dropbtn">Graphs
+            </button>
+            <div class="dropdown-content">
+              <a href="../countries">Comparing Bitcoin With Countries</a>
+              <a href="#here">Growing Energy Consumption</a>
+              <a href="../renewable">Scatter plot (work in progress)</a>
+            </div>
+        </div>
+    </div>
     <h2>Bitcoin's Growing Energy Consumption</h2>
     <p>
       It's no secret that cryptocurrency technology has exploded in recent years;
@@ -78,6 +90,8 @@
         data.forEach(d => {
           d.date = parseTime(d['Date and Time']);
           d.estConsumption = +d['power GUESS, GW'];
+          d.min = +d['power MIN, GW'];
+          d.max = +d['power MAX, GW'];
         });
   
         x.domain(d3.extent(data, d => d.date));
@@ -97,6 +111,16 @@
                 .attr("dy", "0.71em")
                 .attr("fill", "#000")
                 .text("Estimated Daily Energy Consumption (GW)");
+
+        svg.append("path")
+        .datum(data)
+        .attr("fill", "#e5f5e0")
+        .attr("stroke", "none")
+        .attr("d", d3.area()
+          .x(d => x(d.date))
+          .y0(d => y(d.min))
+          .y1(d => y(d.max))
+          )
   
         var bitcoin = svg.selectAll(".bitcoin")
             .data([data])
