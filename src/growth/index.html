@@ -5,6 +5,10 @@
     <script src="https://d3js.org/d3.v5.min.js"></script>
   
     <style>
+      #chart {
+        display: block;
+        margin: auto;
+      }
       .axis--x path {
         stroke: black;
   
@@ -25,10 +29,11 @@
               <a href="../countries">Comparing Bitcoin With Countries</a>
               <a href="#here">Growing Energy Consumption</a>
               <a href="../renewable">Scatter plot (work in progress)</a>
+              <a href="../map">Country Map (work in progress)</a>
             </div>
         </div>
     </div>
-    <h2>Bitcoin's Growing Energy Consumption</h2>
+    <h2 class="centered">Bitcoin's Growing Energy Consumption</h2>
     <p>
       It's no secret that cryptocurrency technology has exploded in recent years;
       what was once seen as a niche and obtuse system now has Super Bowl ads
@@ -48,8 +53,8 @@
       of which are the environmental implications of this boom, considering that such
       cost was already
       <a href="https://www.economist.com/the-economist-explains/2018/07/09/why-bitcoin-uses-so-much-energy">
-        a huge point of concern and criticism in 2018
-      </a>.
+        a huge point of concern and criticism in 2018.
+      </a>
       Additionally, there seems to be no signs of this growth slowing down or stopping;
       the dent caused by the
       <a href="https://fortune.com/2022/01/04/crypto-banned-china-other-countries/">
@@ -95,7 +100,7 @@
         });
   
         x.domain(d3.extent(data, d => d.date));
-        y.domain([0,d3.max(data, d => d.estConsumption)]);
+        y.domain([0,d3.max(data, d => d.max)]);
   
         svg.append("g")
             .attr("class", "axis axis--x")

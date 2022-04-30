@@ -20,6 +20,7 @@
                 <a href="../countries">Comparing Bitcoin With Countries</a>
                 <a href="../growth">Growing Energy Consumption</a>
                 <a href="#here">Scatter plot (work in progress)</a>
+                <a href="../map">Country Map (work in progress)</a>
             </div>
         </div>
     </div>
@@ -115,8 +116,8 @@
             .data(dataMap2)
             .enter()
             .append("circle")
-                .attr("cx", d => d.renewable )
-                .attr("cy", d => d.hashrate )
+                .attr("cx", d => x(d.renewable) )
+                .attr("cy", d => y(d.hashrate) )
                 .attr("r", 5)
                 .style("fill", "#69b3a2");
     }
