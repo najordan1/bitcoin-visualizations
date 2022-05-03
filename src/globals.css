@@ -37,6 +37,7 @@ body {
 
 /* Dropdown button */
 .dropdown .dropbtn {
+    cursor: pointer;
     font-size: 16px;
     border: none;
     outline: none;
