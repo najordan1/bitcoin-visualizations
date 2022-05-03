@@ -122,7 +122,7 @@ var format = d3.format(".3")
 // Set tooltips
 var tip = d3.tip()
             .attr('class', 'd3-tip')
-            .offset([200, 0])
+            .offset([100, 0])
             .html(function(d) {
               return "<strong>Country: </strong><span class='details'>" +
                 d.properties.name + "<br></span>" +
@@ -246,6 +246,18 @@ function ready(error, data, hashrate) {
   function update(date){
     d3.select('.date').text(d3.timeFormat("20%y/%0m/%-d")(date));
 
+    tip = d3.tip().attr('class', 'd3-tip')
+    .offset([100, 0])
+    .html(function(d) {
+      var day = d3.timeFormat("20%y/%-m/%-d")(date);
+      return "<strong>Country: </strong><span class='details'>" +
+      d.properties.name + "<br></span>" +
+      "<strong>% Monthly Share of Bitcoin Hashrate: </strong><span class='details'>" +
+      format(Math.exp(findHash(hashByCountry[d.properties.name], day))) +"%</span>";
+    })
+
+    svg.call(tip);
+
     countryShapes.style("fill", d => {
       var day = d3.timeFormat("20%y/%-m/%-d")(date);
       if(hashByCountry[d.properties.name]){
@@ -255,6 +267,20 @@ function ready(error, data, hashrate) {
         return "#bdbdbd";
       }
     })
+    .on('mouseover',function(d){
+        tip.show(d);
+        d3.select(this)
+          .style("stroke","#FFA500")
+          .style("stroke-width",2)
+          .raise();
+      })
+      .on('mouseout', function(d){
+        tip.hide(d);
+        d3.select(this)
+          .style("stroke","grey")
+          .style("stroke-width",0.3);
+      })
+
   };
 
   // Time
