@@ -8,7 +8,7 @@
           <button class="dropbtn">Graphs
           </button>
           <div class="dropdown-content">
-            <a href="#here">Comparing Bitcoin With Countries</a>
+            <a href="">Comparing Bitcoin With Countries</a>
             <a href="../growth">Growing Energy Consumption</a>
             <a href="../renewable">Scatter plot (work in progress)</a>
             <a href="../map">Country Map (work in progress)</a>
@@ -69,12 +69,18 @@
         of global energy consumption that it actually is.
     </p>
     <style>
-        .bar-chart {
-            border: solid 1px gray;
-            background-color: rgb(255,255,220);
-        }
         .label {
             font-size: 9pt;
+        }
+        .bar-chart {
+          display: block;
+          margin: auto;
+        }
+        p {
+          width: 1100px;
+          display: block;
+          margin: auto;
+          padding: 10px 0px;
         }
     </style>
     <script>
@@ -123,7 +129,7 @@
                     .attr("width", x.bandwidth())
                     .attr("y", y(d.energy))
                     .attr("height", height - y(d.energy))
-                    .style("fill", d.Country === 'Bitcoin' ? '#e41a1c' : '#377eb8');
+                    .style("fill", d.Country === 'Bitcoin' ? '#e41a1c' : '#b3cde3');
             });
 
             svg.append("g")
@@ -203,7 +209,7 @@
                 .attr("width", x.bandwidth())
                 .attr("y", y(d.Value))
                 .attr("height", height - y(d.Value))
-                .style("fill", "#4daf4a" );
+                .style("fill", i === 4 ? '#e41a1c' : '#b3cde3' );
             });
       
             svg2.append("g")
