@@ -1,0 +1,279 @@
+<head>
+    <link rel="stylesheet" href="../globals.css">
+</head>
+<body>
+    <script src="https://d3js.org/d3.v4.js"></script>
+    <script src="https://d3js.org/d3.v4.min.js"></script>
+    <script src="https://d3js.org/queue.v1.min.js"></script>
+  
+    <style>
+        svg {
+        font: 10px sans-serif;
+        padding: 10px;
+        }
+        
+        .axis,
+        .frame {
+        shape-rendering: crispEdges;
+        }
+        
+        .axis line {
+        stroke: #ddd;
+        }
+        
+        .axis path {
+        display: none;
+        }
+        
+        .cell text {
+        font-weight: bold;
+        text-transform: capitalize;
+        fill: black;
+        }
+        
+        .frame {
+        fill: none;
+        stroke: #aaa;
+        }
+        
+        circle {
+        fill-opacity: .7;
+        }
+        
+        circle.hidden {
+        fill: #ccc !important;
+        }
+        
+        .extent {
+        fill: #000;
+        fill-opacity: .125;
+        stroke: #fff;
+        }
+        #chart {
+            display: block;
+            margin: auto;
+        }
+    </style>
+    <div class="topnav">
+        <a class="active" href="../">Home</a>
+        <div class="dropdown">
+            <button class="dropbtn">Graphs
+            </button>
+            <div class="dropdown-content">
+                <a href="../countries">Comparing Bitcoin With Countries</a>
+                <a href="../growth">Growing Energy Consumption</a>
+                <a href="">Scatter plot (work in progress)</a>
+                <a href="../map">Production by Country</a>
+            </div>
+        </div>
+    </div>
+    <h2 class="centered">Energy Comparisons</h2>
+    <p>
+      Some text here.
+    </p>
+    <svg id="chart"></svg>
+    <p>
+      Some more text here.
+    </p>
+    <script>
+        var width = 960,
+        size = 230,
+        padding = 20;
+
+        var x = d3.scaleLinear()
+            .range([padding / 2, size - padding / 2]);
+
+        var y = d3.scaleLinear()
+            .range([size - padding / 2, padding / 2]);
+
+        var xAxis = d3.axisBottom()
+            .scale(x)
+            .ticks(6);
+
+        var yAxis = d3.axisLeft()
+            .scale(y)
+            .ticks(6);
+
+        var color = d3.scaleOrdinal(d3.schemeCategory10);
+
+        queue()
+            .defer(d3.csv, "../data/Github CBECI Hashrate Data.csv")
+            .defer(d3.csv, "../data/Country Renewable Energy Supply.csv")
+            .defer(d3.csv, "../data/2019 Country GDP.csv")
+            .defer(d3.csv, "../data/EIA 2019 International Energy Consumption.csv")
+            .defer(d3.json, "../data/Country Codes.json")
+            .defer(d3.json, "../data/Alt Country Codes.json")
+            .await(ready);
+
+        function ready(error, data, renewable, gdp, energy, countries, altCountries) {
+            if (error) throw error;
+
+            const countryNames = countries.map(d => d.en);
+            const altCountryNames = altCountries.map(d => d.Bitcoin);
+            energy.map(d => {
+                const country = d.Country.trim();
+                if (countryNames.includes(country)) d.country = countries.find(c => c.en === country).alpha3.toUpperCase();
+                else if (altCountryNames.includes(country)) d.country = altCountries.find(c => c.Bitcoin === country).alpha3.toUpperCase();
+                else d.country = null;
+                d.energy = +d['2019'];
+            });
+            energy = energy.filter(d => d.country);
+            gdp.map(row => {
+                row.gdp = +row['2019'];
+                row.country = row['Country Code']
+            });
+            data.map(d => {
+                if (countryNames.includes(d.Country)) d.country = countries.find(c => c.en === d.Country).alpha3.toUpperCase();
+                else d.country = altCountries.find(c => c.Bitcoin === d.Country).alpha3.toUpperCase();
+                d.hashrate = +d['Monthly share of total hashrate (%)'],
+                d.year= +d.Date.substring(0, 4);
+            });
+            data = data.filter(d => d.year === 2019);
+            renewable = renewable.filter(d => d.TIME === '2019')
+                .map(d => ({
+                    year: +d.TIME,
+                    country: d.LOCATION,
+                    value: +d.Value,
+                }));
+            
+            const dataMap = {};
+            data.forEach(d => {
+                if (!dataMap[d.country]) dataMap[d.country] = {
+                    value: 0,
+                    count: 0,
+                    renewable: renewable.find(c => c.country === d.country)?.value,
+                    gdp: gdp.find(c => c.country === d.country)?.gdp,
+                    energy: energy.find(c => c.country === d.country)?.energy
+                };
+                dataMap[d.country].value += d.hashrate;
+                dataMap[d.country].count += 1;
+            });
+            Object.keys(dataMap).forEach(d => {
+                dataMap[d].hashrate = dataMap[d].value / dataMap[d].count;
+            });
+            let dataMap2 = [];
+            Object.keys(dataMap).forEach(d => {
+                dataMap2.push({ ...dataMap[d], country: d });
+            });
+            // != null makes sure we don't remove cases of 0
+            dataMap2 = dataMap2.filter(d => d.renewable != null && d.gdp != null && d.energy != null && d.value != null);
+            
+            // code to make scatterplot brush matrix:
+            const domainByTrait = {};
+            const traits = ['renewable', 'gdp', 'energy', 'hashrate'];
+            const labels = {
+                renewable: 'Renewable Energy Production',
+                gdp: "GDP Per Capita",
+                energy: "Energy Consumption",
+                hashrate: "Bitcoin Hashrate"
+            };
+            const n = 4;
+            traits.forEach(function(trait) {
+                domainByTrait[trait] = d3.extent(dataMap2, d => d[trait]);
+            });
+            xAxis.tickSize(size * n);
+            yAxis.tickSize(-size * n);
+
+            var brush = d3.brush()
+                .on("start", brushstart)
+                .on("brush", brushmove)
+                .on("end", brushend)
+                .extent([[0,0],[size,size]]);
+
+            var svg = d3.select("#chart")
+                .attr("width", size * n + padding)
+                .attr("height", size * n + padding)
+                .append("g")
+                .attr("transform", "translate(" + padding + "," + padding / 2 + ")");
+          
+            svg.selectAll(".x.axis")
+                .data(traits)
+                .enter().append("g")
+                .attr("class", "x axis")
+                .attr("transform", function(d, i) { return "translate(" + (n - i - 1) * size + ",0)"; })
+                .each(function(d) { x.domain(domainByTrait[d]); d3.select(this).call(xAxis); });
+          
+            svg.selectAll(".y.axis")
+                .data(traits)
+                .enter().append("g")
+                .attr("class", "y axis")
+                .attr("transform", function(d, i) { return "translate(0," + i * size + ")"; })
+                .each(function(d) { y.domain(domainByTrait[d]); d3.select(this).call(yAxis); });
+
+            var cell = svg.selectAll(".cell")
+                .data(cross(traits, traits))
+                .enter().append("g")
+                .attr("class", "cell")
+                .attr("transform", function(d) { return "translate(" + (n - d.i - 1) * size + "," + d.j * size + ")"; })
+                .each(plot);
+          
+            // Titles for the diagonal.
+            cell.filter(function(d) { return d.i === d.j; }).append("text")
+                .attr("x", padding)
+                .attr("y", padding)
+                .attr("dy", ".71em")
+                .text(d => labels[d.x]);
+
+            cell.call(brush);
+
+            function plot(p) {
+                var cell = d3.select(this);
+            
+                x.domain(domainByTrait[p.x]);
+                y.domain(domainByTrait[p.y]);
+            
+                cell.append("rect")
+                    .attr("class", "frame")
+                    .attr("x", padding / 2)
+                    .attr("y", padding / 2)
+                    .attr("width", size - padding)
+                    .attr("height", size - padding);
+            
+                cell.selectAll("circle")
+                    .data(dataMap2)
+                    .enter().append("circle")
+                    .attr("cx", function(d) { return x(d[p.x]); })
+                    .attr("cy", function(d) { return y(d[p.y]); })
+                    .attr("r", 4)
+                    .style("fill", '#31a354');
+            }
+
+            var brushCell;
+
+            // Clear the previously-active brush, if any.
+            function brushstart(p) {
+                if (brushCell !== this) {
+                d3.select(brushCell).call(brush.move, null);
+                brushCell = this;
+                x.domain(domainByTrait[p.x]);
+                y.domain(domainByTrait[p.y]);
+                }
+            }
+
+            // Highlight the selected circles.
+            function brushmove(p) {
+                var e = d3.brushSelection(this);
+                svg.selectAll("circle").classed("hidden", function(d) {
+                return !e
+                    ? false
+                    : (
+                    e[0][0] > x(+d[p.x]) || x(+d[p.x]) > e[1][0]
+                    || e[0][1] > y(+d[p.y]) || y(+d[p.y]) > e[1][1]
+                    );
+                });
+            }
+
+            // If the brush is empty, select all circles.
+            function brushend() {
+                var e = d3.brushSelection(this);
+                if (e === null) svg.selectAll(".hidden").classed("hidden", false);
+            }
+        }
+
+        function cross(a, b) {
+            var c = [], n = a.length, m = b.length, i, j;
+            for (i = -1; ++i < n;) for (j = -1; ++j < m;) c.push({x: a[i], i: i, y: b[j], j: j});
+            return c;
+        }
+    
+  </script>
