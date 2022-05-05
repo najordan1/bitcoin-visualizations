@@ -39,15 +39,17 @@
     <script>
         // set the dimensions and margins of the graph
         var margin = {top: 60, right: 230, bottom: 50, left: 50},
-            width = 660 - margin.left - margin.right,
-            height = 400 - margin.top - margin.bottom;
+            width = 960 - margin.left - margin.right,
+            height = 500 - margin.top - margin.bottom;
 
-        var svg = d3.select("#my_dataviz")
+        var svg = d3.select("#chart")
             .attr("width", width + margin.left + margin.right)
             .attr("height", height + margin.top + margin.bottom)
             .append("g")
               .attr("transform",
                     "translate(" + margin.left + "," + margin.top + ")");
+
+        var parseTime = d3.timeParse("%m/%d/%Y");
 
         queue()
             .defer(d3.csv, "../data/CBECI Country Network Hashrate.csv")
@@ -57,7 +59,10 @@
         function ready(error, bitcoin, energy) {
             if (error) throw error;
 
+            ////////////////////////////
             // Clean data but also convert to percentages by energy type
+            // This is all before using the d3 area code
+            ////////////////////////////
             energy = energy.map(d => {
                 const total = +d.Renewable + +d['Natural Gas'] + +d.Petroleum + +d.Coal;
                 return {
@@ -68,8 +73,8 @@
                     coal: +d.Coal / total,
                 };
             });
-            let numNotFound = 0;
-            bitcoin = bitcoin.forEach(d => {
+            bitcoin = bitcoin.map(d => {
+                // once again making the countries match :(
                 let country = '';
                 switch (d.country) {
                     case 'Ireland *':
@@ -94,15 +99,196 @@
                     default:
                         country = d.country;
                         break;
-                }
-                if (!energy.map(c => c.country).includes(country)) {
-                    numNotFound++;
-                    console.log(country);
-                }
+                };
+                return {
+                    date: parseTime(d.date),
+                    country,
+                    hashrate: +d['monthly_absolute_hashrate_EH/S'],
+                };
             });
-            console.log(numNotFound);
-            console.log(bitcoin);
-            console.log(energy);
+            const dataMap = {};
+            bitcoin.forEach(d => {
+                if (!dataMap[d.date]) dataMap[d.date] = {
+                    renewable: 0,
+                    petroleum: 0,
+                    gas: 0,
+                    coal: 0,
+                    total: 0,
+                };
+                countryEnergy = energy.find(e => e.country === d.country);
+                dataMap[d.date].renewable += d.hashrate * countryEnergy.renewable;
+                dataMap[d.date].petroleum += d.hashrate * countryEnergy.petroleum;
+                dataMap[d.date].gas += d.hashrate * countryEnergy.gas;
+                dataMap[d.date].coal += d.hashrate * countryEnergy.coal;
+                dataMap[d.date].total += d.hashrate;
+            });
+            const data = [];
+            Object.keys(dataMap).forEach(d => {
+                data.push({
+                    date: new Date(d),
+                    ...dataMap[d],
+                });
+            });
+            data.sort((a, b) => b.date - a.date);
+            ////////////////////////////
+            // Making the stacked area chart
+            ////////////////////////////
+            const keys = ['renewable', 'petroleum', 'gas', 'coal'];
+            // color palette
+            var color = d3.scaleOrdinal()
+                .domain(keys)
+                .range(d3.schemeSet2);
+
+            //stack the data?
+            var stackedData = d3.stack()
+                .keys(keys)
+                (data);
+
+            //////////
+            // AXIS //
+            //////////
+            // Add X axis
+            var x = d3.scaleTime()
+                .domain(d3.extent(data, d => d.date))
+                .range([ 0, width ]);
+            var xAxis = svg.append("g")
+                .attr("transform", "translate(0," + height + ")")
+                .call(d3.axisBottom(x));
+            // Add X axis label:
+            svg.append("text")
+                .attr("text-anchor", "end")
+                .attr("x", width)
+                .attr("y", height+40 )
+                .text("Time (month)");
+
+            // Add Y axis label:
+            svg.append("text")
+                .attr("text-anchor", "end")
+                .attr("x", 0)
+                .attr("y", -20 )
+                .text("Guessed Energy Types of Bitcoin Mining")
+                .attr("text-anchor", "start")
+
+            // Add Y axis
+            var y = d3.scaleLinear()
+                .domain([0, d3.max(data, d => d.total)])
+                .range([ height, 0 ]);
+            svg.append("g")
+                .call(d3.axisLeft(y).ticks(5))
+
+            // Add a clipPath: everything out of this area won't be drawn.
+            var clip = svg.append("defs").append("svg:clipPath")
+                .attr("id", "clip")
+                .append("svg:rect")
+                .attr("width", width )
+                .attr("height", height )
+                .attr("x", 0)
+                .attr("y", 0);
+
+              // Add brushing
+            var brush = d3.brushX()                 // Add the brush feature using the d3.brush function
+                .extent( [ [0,0], [width,height] ] ) // initialise the brush area: start at 0,0 and finishes at width,height: it means I select the whole graph area
+                .on("end", updateChart) // Each time the brush selection changes, trigger the 'updateChart' function
+
+            // Create the scatter variable: where both the circles and the brush take place
+            var areaChart = svg.append('g')
+                .attr("clip-path", "url(#clip)")
+
+            // Area generator
+            var area = d3.area()
+                .x(function(d) { return x(d.data.date); })
+                .y0(function(d) { return y(d[0]); })
+                .y1(function(d) { return y(d[1]); })
+
+            // Show the areas
+            areaChart
+                .selectAll("mylayers")
+                .data(stackedData)
+                .enter()
+                .append("path")
+                    .attr("class", function(d) { return "myArea " + d.key })
+                    .style("fill", function(d) { return color(d.key); })
+                    .attr("d", area)
+
+            // Add the brushing
+            areaChart
+                .append("g")
+                    .attr("class", "brush")
+                    .call(brush);
+
+            var idleTimeout
+            function idled() { idleTimeout = null; }
+
+            // A function that update the chart for given boundaries
+            function updateChart() {
+
+                extent = d3.event.selection
+
+                // If no selection, back to initial coordinate. Otherwise, update X axis domain
+                if(!extent){
+                if (!idleTimeout) return idleTimeout = setTimeout(idled, 350); // This allows to wait a little bit
+                x.domain(d3.extent(data, function(d) { return d.date; }))
+                }else{
+                x.domain([ x.invert(extent[0]), x.invert(extent[1]) ])
+                areaChart.select(".brush").call(brush.move, null) // This remove the grey brush area as soon as the selection has been done
+                }
+
+                // Update axis and area position
+                xAxis.transition().duration(1000).call(d3.axisBottom(x).ticks(5))
+                areaChart
+                .selectAll("path")
+                .transition().duration(1000)
+                .attr("d", area)
+            }
+
+            //////////
+            // HIGHLIGHT GROUP //
+            //////////
+
+            // What to do when one group is hovered
+            var highlight = function(d){
+                // reduce opacity of all groups
+                d3.selectAll(".myArea").style("opacity", .1)
+                // expect the one that is hovered
+                d3.select("."+d).style("opacity", 1)
+            }
+        
+            // And when it is not hovered anymore
+            var noHighlight = function(d){
+                d3.selectAll(".myArea").style("opacity", 1)
+            }
+
+            //////////
+            // LEGEND //
+            //////////
+
+            // Add one dot in the legend for each name.
+            var size = 20
+            svg.selectAll("myrect")
+            .data(keys)
+            .enter()
+            .append("rect")
+                .attr("x", 700)
+                .attr("y", function(d,i){ return 10 + i*(size+5)}) // 100 is where the first dot appears. 25 is the distance between dots
+                .attr("width", size)
+                .attr("height", size)
+                .style("fill", function(d){ return color(d)})
+                .on("mouseover", highlight)
+                .on("mouseleave", noHighlight)
+
+            // Add one dot in the legend for each name.
+            svg.selectAll("mylabels")
+                .data(keys)
+                .enter()
+                .append("text")
+                .attr("x", 700 + size*1.2)
+                .attr("y", function(d,i){ return 10 + i*(size+5) + (size/2)}) // 100 is where the first dot appears. 25 is the distance between dots
+                .style("fill", function(d){ return color(d)})
+                .text(function(d){ return d})
+                .attr("text-anchor", "left")
+                .style("alignment-baseline", "middle")
+                .on("mouseover", highlight)
+                .on("mouseleave", noHighlight)
         };
     </script>
 </body>
