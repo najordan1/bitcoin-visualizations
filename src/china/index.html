@@ -2,6 +2,19 @@
     <link rel="stylesheet" href="../globals.css">
 </head>
 <body>
+    <!-- Load d3.js & color scale-->
+    <script src="https://d3js.org/d3.v4.js"></script>
+    <script src="https://d3js.org/d3.v4.min.js"></script>
+    <script src="https://d3js.org/queue.v1.min.js"></script>
+    <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+    <!-- Styling -->
+    <style>
+        #chart {
+            display: block;
+            margin: auto;
+        }
+    </style>
+    <!-- Nav bar -->
     <div class="topnav">
         <a class="active" href="../">Home</a>
         <div class="dropdown">
@@ -16,5 +29,79 @@
             </div>
         </div>
     </div>
+    <!-- Page -->
     <h2 class="centered">The Global Effects of China's Crypto Ban</h2>
+    <p>Some text here</p>
+    <svg id="chart"></svg>
+    <p>Some text here</p>
+    <!-- Script and data processing -->
+    <script>
+        // set the dimensions and margins of the graph
+        var margin = {top: 60, right: 230, bottom: 50, left: 50},
+            width = 660 - margin.left - margin.right,
+            height = 400 - margin.top - margin.bottom;
+
+        var svg = d3.select("#my_dataviz")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+              .attr("transform",
+                    "translate(" + margin.left + "," + margin.top + ")");
+
+        queue()
+            .defer(d3.csv, "../data/CBECI Country Network Hashrate.csv")
+            .defer(d3.csv, "../data/EIA 2019 Country Energy Consumption By Type.csv")
+            .await(ready);
+
+        function ready(error, bitcoin, energy) {
+            if (error) throw error;
+
+            // Clean data but also convert to percentages by energy type
+            energy = energy.map(d => {
+                const total = +d.Renewable + +d['Natural Gas'] + +d.Petroleum + +d.Coal;
+                return {
+                    country: d.Country.trim(),
+                    renewable: +d.Renewable / total,
+                    gas: +d['Natural Gas'] / total,
+                    petroleum: +d.Petroleum / total,
+                    coal: +d.Coal / total,
+                };
+            });
+            let numNotFound = 0;
+            bitcoin = bitcoin.forEach(d => {
+                let country = '';
+                switch (d.country) {
+                    case 'Ireland *':
+                        country = 'Ireland';
+                        break;
+                    case 'Germany *':
+                        country = 'Germany';
+                        break;
+                    case 'Mainland China':
+                        country = 'China';
+                        break;
+                    case 'Iran, Islamic Rep.':
+                        country = 'Iran';
+                        break;
+                    case 'Russian Federation':
+                        country = 'Russia';
+                        break;
+                    // 'other' will just use world
+                    case 'Other':
+                        country = 'World';
+                        break;
+                    default:
+                        country = d.country;
+                        break;
+                }
+                if (!energy.map(c => c.country).includes(country)) {
+                    numNotFound++;
+                    console.log(country);
+                }
+            });
+            console.log(numNotFound);
+            console.log(bitcoin);
+            console.log(energy);
+        };
+    </script>
 </body>
