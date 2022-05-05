@@ -89,9 +89,11 @@ p {
     color: #17B890;
     font-weight: 700;
 }
-p {
+p, li {
     width: 1100px;
-    display: block;
     margin: auto;
     padding: 10px 0px;
+}
+p {
+    display: block;
 }
