@@ -3,6 +3,7 @@
 </head>
 <body>
     <!-- Load d3 -->
+    <script src="https://d3js.org/d3.v3.min.js"></script>
     <script src="https://d3js.org/d3.v4.js"></script>
     <script src="https://d3js.org/d3.v4.min.js"></script>
     <!-- Styling -->
@@ -33,6 +34,75 @@
     <!-- Page -->
     <h2 class="centered">Energy Redundancy</h2>
     <p>Some text here</p>
-    <svg id="chart"></svg>
+    <div id="waffle"></div>
     <p>Some text here</p>
 </body>
+
+<script>
+var margin = {top: 20, right: 20, bottom: 30, left: 80};
+
+var widthSquares = 150,
+    heightSquares = 100,
+    squareSize = 5,
+    squareValue = 16433,
+    gap = .5,
+    comSquares = [];
+
+var width = (squareSize*widthSquares) + widthSquares*gap + 100;
+var height = (squareSize*heightSquares) + heightSquares*gap + 50;
+
+var svg = d3.select("#waffle")
+            .append("svg")
+            .attr("width", width)
+            .attr("height", height)
+            .append("g");
+
+d3.csv("data.csv", function(error, data)
+{
+
+  //remap data
+  data.forEach(function(d, i)
+  {
+      d.units = Math.floor(d.number);
+      comSquares = comSquares.concat(
+        Array(d.units+1).join(1).split('').map(function()
+          {
+            return {group:i};
+          })
+        );
+  });
+  console.log(comSquares);
+
+
+  var waffle = svg.append("g")
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.top + margin.bottom)
+      .append("g")
+      .selectAll("div")
+      .data(comSquares)
+      .enter()
+      .append("rect")
+      .attr("width", squareSize)
+      .attr("height", squareSize)
+      .attr("x", function(d, i)
+        {
+          //group n squares for column
+          col = Math.floor(i/heightSquares);
+          return (col*squareSize) + (col*gap);
+        })
+      .attr("y", function(d, i)
+      {
+        row = i%heightSquares;
+        return (heightSquares*squareSize) - ((row*squareSize) + (row*gap)) + 50
+      })
+      .attr("fill", function(d) {
+        return (d.group === 1 ? '#e41a1c' : '#2378e8')})
+
+    var label = svg.append("text")
+                .attr("x", width - 125)
+                .attr("y", height - 35)
+                .style("font-size", "10px")
+                .text("1 square = 144 computers")
+
+});
+</script>
