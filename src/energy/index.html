@@ -74,14 +74,25 @@
     </div>
     <h2 class="centered">Energy Comparisons</h2>
     <p>
-      Some text here.
+        What factors influence bitcoin mining? Are high energy consuming, rich countries the
+        main actors? As it turns out, it's hard to tell, due to the few countries that dominate
+        bitcoin mining. That said, this page attempts to help readers explore some of these
+        correlations on their own. Displaying renewable energy production, energy consumption,
+        GDP per capita and bitcoin hashrate, feel free to explore the graph matrix below and
+        learn more about the state of energy production and consumption in the world.
+    </p>
+    <p>
+        Instructions: The graph below is a matrix, where an (i, j) cell displays variable i on the
+        x-axis and variable j on the y-axis. In other words, renewable energy is on every y-axis
+        in the first row and each x-axis in the last column, and so on. Selecting a collection of
+        points on one plot also highlights those points in the other plots, to help with comparison.
+        Simply double-click to reset.
     </p>
     <svg id="chart"></svg>
-    <p>
-      Some more text here.
-    </p>
     <script>
-        var width = 960,
+        var margin = {top: 60, right: 230, bottom: 50, left: 50},
+        width = 960 - margin.left - margin.right,
+        height = 500 - margin.top - margin.bottom,
         size = 230,
         padding = 20;
 
@@ -189,7 +200,7 @@
                 .attr("width", size * n + padding)
                 .attr("height", size * n + padding)
                 .append("g")
-                .attr("transform", "translate(" + padding + "," + padding / 2 + ")");
+                .attr("transform", "translate(" + (20+padding) + "," + padding / 2 + ")");
           
             svg.selectAll(".x.axis")
                 .data(traits)
