@@ -35,7 +35,7 @@
     <!-- Page -->
     <h2 class="centered">Energy Redundancy</h2>
     <p>Some text here</p>
-    <div id="waffle"></div>
+    <svg id="chart"></svg>
     <p>Some text here</p>
 </body>
 
@@ -52,8 +52,7 @@ var widthSquares = 150,
 var width = (squareSize*widthSquares) + widthSquares*gap + 100;
 var height = (squareSize*heightSquares) + heightSquares*gap + 50;
 
-var svg = d3.select("#waffle")
-            .append("svg")
+var svg = d3.select("#chart")
             .attr("width", width)
             .attr("height", height)
             .append("g");
@@ -72,8 +71,6 @@ d3.csv("../data/Redundancy Data.csv", function(error, data)
           })
         );
   });
-  console.log(comSquares);
-
 
   var waffle = svg.append("g")
       .attr("width", width + margin.left + margin.right)
@@ -97,7 +94,7 @@ d3.csv("../data/Redundancy Data.csv", function(error, data)
         return (heightSquares*squareSize) - ((row*squareSize) + (row*gap)) + 50
       })
       .attr("fill", function(d) {
-        return (d.group === 1 ? '#e41a1c' : '#2378e8')})
+        return (d.group === 1 ? '#e41a1c' : '#b3cde3')})
 
     var label = svg.append("text")
                 .attr("x", width - 125)
