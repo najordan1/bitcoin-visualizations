@@ -33,10 +33,42 @@
         <a href="https://github.com/najordan1/bitcoin-visualizations" target="_blank">Code</a>
     </div>
     <!-- Page -->
-    <h2 class="centered">Energy Redundancy</h2>
-    <p>Some text here</p>
+    <h2 class="centered">Redundant Energy Consumption</h2>
+    <p>As previously mentioned, one of the most fundamental parts of Bitcoin’s functionality is 
+        its proof-of-work model, which it uses to maintain the security of its blockchain and 
+        ensure a constant rate of production no matter how many mining computers are active. To 
+        put it in basic terms, Bitcoin is mined through the generation of blocks, which requires 
+        miners to find a hash below a target 256-bit number. Once found, a solution hash can be 
+        easily verified by other miners, but the only way to find a solution is through an extraordinarily 
+        high volume of guessing - the computational ‘work’ in question. Additionally, Bitcoin 
+        adjusts the difficulty of this target based on the amount of miners in the network, so 
+        that no matter how much computational power is used, a block will always be generated 
+        approximately every 10 minutes. While this does ensure Bitcoin is consistently produced 
+        and server-side fraud is prevented (as the low probability of finding a solution makes it 
+        impossibly difficult for bad actors to extend fraudulent chains), it also means that all 
+        Bitcoin miner are trying to solving the same problem at once, and thus a lot of the energy 
+        consumption of bitcoin is largely spent on redundant work. To demonstrate this, the 
+        following visualization has been created by taking the average daily total energy consumption 
+        of Bitcoin in 2021 (as estimated by the CBECI) and dividing it by the energy consumption of a 
+        single mining computer (5 kWh per hour, or 120 kWh when running continuously for a full day) 
+        to find the average number of active Bitcoin mining computers on a given day. Each square 
+        represents 144 computers: the red squares represent computers that solved a single block on 
+        a given day, and the blue squares represent computers that worked continuously for 24 hours 
+        without solving anything (and thus doing purely redundant work).</p>
     <svg id="chart"></svg>
-    <p>Some text here</p>
+    <p>As we can clearly see, even assuming the best case (and most likely, since the odds of solving 
+        a block more than once in 24 hours is extremely low) scenario of every block being solved by 
+        a different computer, the amount of computers doing purely redundant work on a given day outnumber 
+        the rewarded computers by a ratio of 16,443:1. Additionally the 5 kWh figure is actually an 
+        overestimation of the energy consumption of the average mining computer, meaning that the actual 
+        number of computers mining Bitcoin, and thus the number of computers doing purely redundant work, 
+        is likely even greater than this figure shows. One could argue that, since the proof-of-work model 
+        maintains Bitcoin’s consistency and security, all of this computational power has a purpose and so, 
+        the consumption, while redundant, is not wasted. However, this fails to consider whether Bitcoin is 
+        the best use of the redundant computational power, particularly when more efficient models such as 
+        proof-of-stake exist in other cryptocurrencies. This leads us to a question: if Bitcoin requires 
+        this much redundant energy consumption to function (a number which will only increase as Bitcoin grows 
+        and more computers join the network), then is Bitcoin really worth the energy it consumes?</p>
 </body>
 
 <script>
@@ -45,7 +77,7 @@ var margin = {top: 20, right: 20, bottom: 30, left: 80};
 var widthSquares = 150,
     heightSquares = 100,
     squareSize = 5,
-    squareValue = 16433,
+    squareValue = 16444,
     gap = .5,
     comSquares = [];
 
