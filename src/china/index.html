@@ -9,7 +9,7 @@
     <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
     <!-- Styling -->
     <style>
-        #chart {
+        #chart1, #chart2 {
             display: block;
             margin: auto;
         }
@@ -34,10 +34,28 @@
         <a href="https://github.com/najordan1/bitcoin-visualizations" target="_blank">Code</a>
     </div>
     <!-- Page -->
-    <h2 class="centered">The Global Effects of China's Crypto Ban</h2>
-    <p>Some text here</p>
-    <svg id="chart"></svg>
-    <p>Some text here</p>
+    <h2 class="centered">The Global Effects of China's Cryptocurrency Mining Ban</h2>
+    <p>
+        China's July 2021 ban on cryptocurrency mining has led to a drastic remaking of the
+        global cryptocurrency mining arena. Such a ban, isolated to one country alone, might
+        have lead some to hope for a long-term reduction of bitcoin mining; on the contrary,
+        it has led miners to either move their operation, or stay in China and hide their mining.
+        As the first area chart below shows, China led the world in 2019 with close to 80% of all
+        bitcoin mining, whereas its ban on mining has allowed the United States to emerge as the
+        new leader in bitcoin mining. Through this transition, we estimate that bitcoin is now
+        substantially less powered by coal. However, renewable energies continue to comprise only
+        a small fraction of all energy used.
+    </p>
+    <p>
+        Instructions: selecting an area on one of the graphs will zoom the x-axis into that area.
+        Simply double-click on the graph to reset.
+    </p>
+    <p>
+        * Note: The values for Germany and Ireland are likely inflated due to VPN proxying by miners,
+        and should be treated as data anomalies.
+    </p>
+    <svg id="chart2"></svg>
+    <svg id="chart1"></svg>
     <!-- Script and data processing -->
     <script>
         // set the dimensions and margins of the graph
@@ -45,11 +63,18 @@
             width = 960 - margin.left - margin.right,
             height = 500 - margin.top - margin.bottom;
 
-        var svg = d3.select("#chart")
+        var svg = d3.select("#chart1")
             .attr("width", width + margin.left + margin.right)
             .attr("height", height + margin.top + margin.bottom)
             .append("g")
               .attr("transform",
+                    "translate(" + margin.left + "," + margin.top + ")");
+
+        var svg2 = d3.select("#chart2")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+                .attr("transform",
                     "translate(" + margin.left + "," + margin.top + ")");
 
         var parseTime = d3.timeParse("%m/%d/%Y");
@@ -140,7 +165,7 @@
             // color palette
             var color = d3.scaleOrdinal()
                 .domain(keys)
-                .range(d3.schemeSet2);
+                .range(d3.schemeTableau10);
 
             //stack the data?
             var stackedData = d3.stack()
@@ -169,7 +194,7 @@
                 .attr("text-anchor", "end")
                 .attr("x", 0)
                 .attr("y", -20 )
-                .text("Guessed Energy Types of Bitcoin Mining")
+                .text("Guessed Energy Types of Bitcoin Mining (BTU)")
                 .attr("text-anchor", "start")
 
             // Add Y axis
@@ -199,9 +224,9 @@
 
             // Area generator
             var area = d3.area()
-                .x(function(d) { return x(d.data.date); })
-                .y0(function(d) { return y(d[0]); })
-                .y1(function(d) { return y(d[1]); })
+                .x(d => x(d.data.date))
+                .y0(d => y(d[0]))
+                .y1(d => y(d[1]))
 
             // Show the areas
             areaChart
@@ -209,8 +234,8 @@
                 .data(stackedData)
                 .enter()
                 .append("path")
-                    .attr("class", function(d) { return "myArea " + d.key })
-                    .style("fill", function(d) { return color(d.key); })
+                    .attr("class", d => "myArea " + d.key)
+                    .style("fill", d => color(d.key))
                     .attr("d", area)
 
             // Add the brushing
@@ -229,36 +254,19 @@
 
                 // If no selection, back to initial coordinate. Otherwise, update X axis domain
                 if(!extent){
-                if (!idleTimeout) return idleTimeout = setTimeout(idled, 350); // This allows to wait a little bit
-                x.domain(d3.extent(data, function(d) { return d.date; }))
-                }else{
+                    if (!idleTimeout) return idleTimeout = setTimeout(idled, 350); // This allows to wait a little bit
+                    x.domain(d3.extent(data, d => d.date))
+                } else {
                 x.domain([ x.invert(extent[0]), x.invert(extent[1]) ])
-                areaChart.select(".brush").call(brush.move, null) // This remove the grey brush area as soon as the selection has been done
+                    areaChart.select(".brush").call(brush.move, null) // This remove the grey brush area as soon as the selection has been done
                 }
 
                 // Update axis and area position
                 xAxis.transition().duration(1000).call(d3.axisBottom(x).ticks(5))
                 areaChart
-                .selectAll("path")
-                .transition().duration(1000)
-                .attr("d", area)
-            }
-
-            //////////
-            // HIGHLIGHT GROUP //
-            //////////
-
-            // What to do when one group is hovered
-            var highlight = function(d){
-                // reduce opacity of all groups
-                d3.selectAll(".myArea").style("opacity", .1)
-                // expect the one that is hovered
-                d3.select("."+d).style("opacity", 1)
-            }
-        
-            // And when it is not hovered anymore
-            var noHighlight = function(d){
-                d3.selectAll(".myArea").style("opacity", 1)
+                    .selectAll("path")
+                    .transition().duration(1000)
+                    .attr("d", area)
             }
 
             //////////
@@ -272,12 +280,10 @@
             .enter()
             .append("rect")
                 .attr("x", 700)
-                .attr("y", function(d,i){ return 10 + i*(size+5)}) // 100 is where the first dot appears. 25 is the distance between dots
+                .attr("y", (d,i) => 10 + i*(size+5)) // 100 is where the first dot appears. 25 is the distance between dots
                 .attr("width", size)
                 .attr("height", size)
-                .style("fill", function(d){ return color(d)})
-                .on("mouseover", highlight)
-                .on("mouseleave", noHighlight)
+                .style("fill", d => color(d));
 
             // Add one dot in the legend for each name.
             svg.selectAll("mylabels")
@@ -285,13 +291,171 @@
                 .enter()
                 .append("text")
                 .attr("x", 700 + size*1.2)
-                .attr("y", function(d,i){ return 10 + i*(size+5) + (size/2)}) // 100 is where the first dot appears. 25 is the distance between dots
-                .style("fill", function(d){ return color(d)})
-                .text(function(d){ return d})
+                .attr("y", (d,i) => 10 + i*(size+5) + (size/2)) // 100 is where the first dot appears. 25 is the distance between dots
+                .style("fill", d => color(d))
+                .text(d => d)
                 .attr("text-anchor", "left")
-                .style("alignment-baseline", "middle")
-                .on("mouseover", highlight)
-                .on("mouseleave", noHighlight)
+                .style("alignment-baseline", "middle");
+        };
+        queue()
+            .defer(d3.csv, "../data/CBECI Country Network Hashrate.csv")
+            .await(ready2);
+
+        function ready2(error, bitcoin) {
+            if (error) throw error;
+
+            const dataMap = {};
+            bitcoin
+                .map(d => ({
+                    date: parseTime(d.date),
+                    country: d.country,
+                    percentage: +d['monthly_hashrate_%'].slice(0, -1),
+                })).forEach(d => {
+                    if (!dataMap[d.date]) dataMap[d.date] = {};
+                    dataMap[d.date][d.country] = d.percentage;
+                });
+            const data = [];
+            Object.keys(dataMap).forEach(d => {
+                data.push({
+                    date: new Date(d),
+                    ...dataMap[d],
+                });
+            });
+            const keys = Array.from(new Set(bitcoin.map(d => d.country)));
+            // color palette
+            var color = d3.scaleOrdinal()
+                .domain(keys)
+                .range(d3.schemeTableau10);
+
+            //stack the data?
+            var stackedData = d3.stack()
+                .keys(keys)
+                (data);
+
+            //////////
+            // AXIS //
+            //////////
+            // Add X axis
+            var x = d3.scaleTime()
+                .domain(d3.extent(data, d => d.date))
+                .range([ 0, width ]);
+            var xAxis = svg2.append("g")
+                .attr("transform", "translate(0," + height + ")")
+                .call(d3.axisBottom(x));
+            // Add X axis label:
+            svg2.append("text")
+                .attr("text-anchor", "end")
+                .attr("x", width)
+                .attr("y", height+40 )
+                .text("Time (month)");
+
+            // Add Y axis label:
+            svg2.append("text")
+                .attr("text-anchor", "end")
+                .attr("x", 0)
+                .attr("y", -20 )
+                .text("Country's Monthly Share of Bitcoin Mining")
+                .attr("text-anchor", "start")
+
+            // Add Y axis
+            var y = d3.scaleLinear()
+                .domain([0, 100])
+                .range([ height, 0 ]);
+            svg2.append("g")
+                .call(d3.axisLeft(y).ticks(5))
+
+            // Add a clipPath: everything out of this area won't be drawn.
+            var clip = svg2.append("defs").append("svg:clipPath")
+                .attr("id", "clip")
+                .append("svg:rect")
+                .attr("width", width )
+                .attr("height", height )
+                .attr("x", 0)
+                .attr("y", 0);
+
+              // Add brushing
+            var brush = d3.brushX()                 // Add the brush feature using the d3.brush function
+                .extent( [ [0,0], [width,height] ] ) // initialise the brush area: start at 0,0 and finishes at width,height: it means I select the whole graph area
+                .on("end", updateChart) // Each time the brush selection changes, trigger the 'updateChart' function
+
+            // Create the scatter variable: where both the circles and the brush take place
+            var areaChart = svg2.append('g')
+                .attr("clip-path", "url(#clip)")
+
+            // Area generator
+            var area = d3.area()
+                .x(d => x(d.data.date))
+                .y0(d => y(d[0]))
+                .y1(d => y(d[1]))
+
+            // Show the areas
+            areaChart
+                .selectAll("mylayers")
+                .data(stackedData)
+                .enter()
+                .append("path")
+                    .attr("class", d => "myArea " + d.key)
+                    .style("fill", d => color(d.key))
+                    .attr("d", area)
+
+            // Add the brushing
+            areaChart
+                .append("g")
+                    .attr("class", "brush")
+                    .call(brush);
+
+            var idleTimeout
+            function idled() { idleTimeout = null; }
+
+            // A function that update the chart for given boundaries
+            function updateChart() {
+
+                extent = d3.event.selection
+
+                // If no selection, back to initial coordinate. Otherwise, update X axis domain
+                if(!extent){
+                    if (!idleTimeout) return idleTimeout = setTimeout(idled, 350); // This allows to wait a little bit
+                    x.domain(d3.extent(data, d => d.date))
+                } else {
+                x.domain([ x.invert(extent[0]), x.invert(extent[1]) ])
+                    areaChart.select(".brush").call(brush.move, null) // This remove the grey brush area as soon as the selection has been done
+                }
+
+                // Update axis and area position
+                xAxis.transition().duration(1000).call(d3.axisBottom(x).ticks(5))
+                areaChart
+                    .selectAll("path")
+                    .transition().duration(1000)
+                    .attr("d", area)
+            }
+
+            //////////
+            // LEGEND //
+            //////////
+
+            // Add one dot in the legend for each name.
+            var size = 20
+            svg2.selectAll("myrect")
+            .data(keys)
+            .enter()
+            .append("rect")
+                .attr("x", 700)
+                .attr("y", (d,i) => 10 + i*(size+5)) // 100 is where the first dot appears. 25 is the distance between dots
+                .attr("width", size)
+                .attr("height", size)
+                .style("fill", d => color(d));
+
+            // Add one dot in the legend for each name.
+            svg2.selectAll("mylabels")
+                .data(keys)
+                .enter()
+                .append("text")
+                .attr("x", 700 + size*1.2)
+                .attr("y", (d,i) => 10 + i*(size+5) + (size/2)) // 100 is where the first dot appears. 25 is the distance between dots
+                .style("fill", d => color(d))
+                .text(d => d)
+                .attr("text-anchor", "left")
+                .style("alignment-baseline", "middle");
         };
     </script>
 </body>
