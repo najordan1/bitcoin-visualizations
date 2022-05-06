@@ -100,35 +100,39 @@
       <a href="https://github.com/najordan1/bitcoin-visualizations" target="_blank">Code</a>
   </div>
   <h2 class="centered">Bitcoin Production by Country</h2>
-  <div class="intro">
-    <p>
+  <p>
       There are a number of ways to break down the global energy consumption of Bitcoin, in order 
 	    to gain a more precise and clear understanding of that consumption. Perhaps the most 
-	    obvious category to divide Bitcoin’s consumption into is by country, as that will give 
-	    us a physical sense for where geographically the most energy is being consumed for Bitcoin. 
+	    obvious category to divide Bitcoin's consumption into is by country, which provides
+	    a physical sense for where geographically the most energy is being consumed for Bitcoin. 
 	    The following visualization shows, from September 2019 to April 2020, which countries produced 
 	    the largest amount of Bitcoin. Specifically, we are measuring each country's percentage share 
 	    of the Bitcoin hashrate for that month. This visualization shows us where Bitcoin production 
 	    (and thus energy consumption) was concentrated during that time, and how that changed over time.
-    </p>
-  </div>
+  </p>
+  <p>
+      Instructions: Use the slider below the map to adjust the data by month. Note that the color
+      scale of the map is logarithmic.
+  </p>
   <svg id="map"></svg>
   <svg id="slider"></svg>
-    <p>
-      It is worth noting that the dataset for this visualization can only give us a limited understanding of 
+  <p>
+      It is worth noting that the dataset for this visualization only provides a limited understanding of 
 	    the geographical breakdown of Bitcoin production, due to both its limited range and its age. For 
 	    example, the visualization clearly shows China as by far the largest producer of Bitcoin, ranging 
-	    from 65-75% of the monthly hashrate share. However, we know that this is no longer the case, as China’s 
+	    from 65-75% of the monthly hashrate share. However, we know that this is no longer the case, as China's 
 	    2021 ban on cryptocurrencies has caused a sharp decline in mining activities there, and 
 	    <a href="https://www.cnbc.com/2021/10/13/us-beats-china-as-the-number-one-destination-for-bitcoin-miners.html">
-            currently the US holds the greatest number of Bitcoin miners</a>. However, there are still some points of interest to take from 
+          currently the US holds the greatest number of Bitcoin miners.
+      </a>
+      However, there are still some points of interest to take from 
 	    this map: first, that Bitcoin mining is widespread, with countries in every part of the map contributing (albeit 
 	    usually in very small amounts) to Bitcoin production. Additionally, looking at the changes to the graph over time 
 	    we can see that Bitcoin production is also growing across the world, as more countries start contributing to the 
-	    Bitcoin hashrate share, and China’s majority share is lessened by 10% between September and April. All of this 
+	    Bitcoin hashrate share, and China's majority share is lessened by 10% between September and April. All of this 
 	    points to an industry that is growing increasingly popular, not just in the largest and most consumptive nations 
 	    like China and the US, but also throughout the entire world.
-    </p>	
+  </p>	
 
   <script src="https://d3js.org/d3.v4.min.js"></script>
   <script src="https://d3js.org/queue.v1.min.js"></script>
@@ -196,7 +200,7 @@ queue()
     .await(ready);
 
 function ready(error, data, hashrate) {
-  console.log(hashrate);
+  if (error) throw error;
 
   hashrate.forEach(d => {
     //rename Country/Region
@@ -253,7 +257,6 @@ function ready(error, data, hashrate) {
 
     var dates = d3.keys(dateCollect);
     var date = dates[0];
-    console.log(dates);
 
     var country = d3.nest()
         .key(d => d["Country"])
